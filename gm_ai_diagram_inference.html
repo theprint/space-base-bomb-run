@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Base Bomb Run — Inference / Gameplay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c0c18;
+    --bg2:       #13131f;
+    --bg3:       #1a1a2e;
+    --blue:      #60a5fa;
+    --blue-bg:   rgba(59,130,246,0.08);
+    --blue-bdr:  rgba(96,165,250,0.28);
+    --teal:      #2dd4bf;
+    --teal-bg:   rgba(20,184,166,0.08);
+    --teal-bdr:  rgba(45,212,191,0.28);
+    --orange:    #fb923c;
+    --orange-bg: rgba(249,115,22,0.08);
+    --orange-bdr:rgba(251,146,60,0.28);
+    --purple:    #c084fc;
+    --purple-bg: rgba(168,85,247,0.08);
+    --purple-bdr:rgba(192,132,252,0.28);
+    --green:     #4ade80;
+    --green-bg:  rgba(74,222,128,0.08);
+    --green-bdr: rgba(74,222,128,0.28);
+    --amber:     #fbbf24;
+    --amber-bg:  rgba(251,191,36,0.08);
+    --amber-bdr: rgba(251,191,36,0.28);
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --dim:       #94a3b8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 48px 56px 64px;
+    min-width: 640px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    max-width: 740px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /* ── Header ───────────────────────────────── */
+  header {
+    text-align: center;
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--green);
+  }
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--dim);
+    font-weight: 300;
+  }
+
+  /* ── Panel label ──────────────────────────── */
+  .panel-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-left: 2px;
+  }
+  .panel-label .pip {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .panel-label span {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  /* ── Weights source banner ────────────────── */
+  .weights-source {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    margin-bottom: 18px;
+    background: rgba(251,191,36,0.05);
+    border: 1px dashed rgba(251,191,36,0.35);
+    border-radius: 8px;
+  }
+  .weights-source svg { flex-shrink: 0; }
+  .weights-source span {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(251,191,36,0.85);
+    letter-spacing: 0.3px;
+  }
+  .weights-source code {
+    color: #fde68a;
+    font-size: 10px;
+  }
+
+  /* ── Card ─────────────────────────────────── */
+  .card {
+    border-radius: 10px;
+    border: 1px solid;
+    padding: 14px 16px 14px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 10px 0 0 10px;
+  }
+
+  .card.blue   { background: var(--blue-bg);   border-color: var(--blue-bdr);   }
+  .card.blue::before   { background: var(--blue); }
+  .card.teal   { background: var(--teal-bg);   border-color: var(--teal-bdr);   }
+  .card.teal::before   { background: var(--teal); }
+  .card.orange { background: var(--orange-bg); border-color: var(--orange-bdr); }
+  .card.orange::before { background: var(--orange); }
+  .card.purple { background: var(--purple-bg); border-color: var(--purple-bdr); }
+  .card.purple::before { background: var(--purple); }
+  .card.green  { background: var(--green-bg);  border-color: var(--green-bdr);  }
+  .card.green::before  { background: var(--green); }
+  .card.amber  { background: var(--amber-bg);  border-color: var(--amber-bdr);  }
+  .card.amber::before  { background: var(--amber); }
+
+  .card-inner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 5px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .card-body { flex: 1; }
+
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .card-title code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+
+  /* ── Chips ────────────────────────────────── */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid;
+    line-height: 1.6;
+  }
+  .chip.blue   { color: #93c5fd; border-color: rgba(96,165,250,0.3);  background: rgba(59,130,246,0.1); }
+  .chip.teal   { color: #5eead4; border-color: rgba(45,212,191,0.3);  background: rgba(20,184,166,0.1); }
+  .chip.orange { color: #fdba74; border-color: rgba(251,146,60,0.3);  background: rgba(249,115,22,0.1); }
+  .chip.purple { color: #d8b4fe; border-color: rgba(192,132,252,0.3); background: rgba(168,85,247,0.1); }
+  .chip.green  { color: #86efac; border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.1); }
+  .chip.amber  { color: #fde68a; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.1); }
+
+  /* ── Step connector ───────────────────────── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 26px;
+  }
+  .connector-line {
+    flex: 1;
+    width: 1.5px;
+  }
+  .connector-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+  }
+
+  .connector.blue   .connector-line { background: linear-gradient(to bottom, var(--blue-bdr), rgba(96,165,250,0.5)); }
+  .connector.blue   .connector-arrow { border-top: 5px solid rgba(96,165,250,0.7); }
+  .connector.teal   .connector-line { background: linear-gradient(to bottom, var(--teal-bdr), rgba(45,212,191,0.5)); }
+  .connector.teal   .connector-arrow { border-top: 5px solid rgba(45,212,191,0.7); }
+  .connector.purple .connector-line { background: linear-gradient(to bottom, var(--purple-bdr), rgba(192,132,252,0.5)); }
+  .connector.purple .connector-arrow { border-top: 5px solid rgba(192,132,252,0.7); }
+  .connector.amber  .connector-line { background: linear-gradient(to bottom, var(--amber-bdr), rgba(251,191,36,0.5)); }
+  .connector.amber  .connector-arrow { border-top: 5px solid rgba(251,191,36,0.7); }
+  .connector.green  .connector-line { background: linear-gradient(to bottom, var(--green-bdr), rgba(74,222,128,0.5)); }
+  .connector.green  .connector-arrow { border-top: 5px solid rgba(74,222,128,0.7); }
+
+  /* ── Loop-back indicator ──────────────────── */
+  .loop-back {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: rgba(74,222,128,0.05);
+    border: 1px dashed rgba(74,222,128,0.25);
+    border-radius: 7px;
+  }
+  .loop-back svg { flex-shrink: 0; }
+  .loop-back span {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(74,222,128,0.7);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Legend ───────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 20px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+  .legend-swatch {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Inference / Gameplay</div>
+    <h1>Space Base Bomb Run — <em>GM-AI</em></h1>
+    <p class="subtitle">How the transformer reads game state and controls difficulty in real time</p>
+  </header>
+
+  <div class="panel-label">
+    <div class="pip"></div>
+    <span>Inference / Gameplay</span>
+  </div>
+
+  <!-- Weights source banner -->
+  <div class="weights-source">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 13V1M7 1l-3 3M7 1l3 3" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span>weights loaded from <code>ai/weights.json</code> once at game startup — see Training Pipeline</span>
+  </div>
+
+  <div class="card blue">
+    <div class="card-inner">
+      <div class="step-num">01</div>
+      <div class="card-body">
+        <div class="card-title">Spawn Timer Tick</div>
+        <div class="card-desc">The game's spawn timer fires on a regular interval, triggering the GM-AI pipeline. The interval itself is one of the parameters the GM can adjust.</div>
+        <div class="chips">
+          <span class="chip blue">2–6 second interval</span>
+          <span class="chip blue">GM-controlled rate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card teal">
+    <div class="card-inner">
+      <div class="step-num">02</div>
+      <div class="card-body">
+        <div class="card-title"><code>gm_controller.gd</code> — Collect Snapshot</div>
+        <div class="card-desc">Reads current game state and assembles the 20-feature vector. Features are in the exact same order the model was trained on. Rolling 10s stats (kills, hits, score) are tracked internally.</div>
+        <div class="chips">
+          <span class="chip teal">play_time</span>
+          <span class="chip teal">score</span>
+          <span class="chip teal">lives</span>
+          <span class="chip teal">player position</span>
+          <span class="chip teal">enemy counts</span>
+          <span class="chip teal">total threat</span>
+          <span class="chip teal">spawn budget</span>
+          <span class="chip teal">kills / hits (10s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card teal">
+    <div class="card-inner">
+      <div class="step-num">03</div>
+      <div class="card-body">
+        <div class="card-title">Rolling Buffer — Last 8 Snapshots</div>
+        <div class="card-desc">Maintains a sliding window of the 8 most recent snapshots. Zero-padded on the left at game start. Gives the transformer temporal context — it can see trends, not just a single moment.</div>
+        <div class="chips">
+          <span class="chip teal">8 × 20 matrix</span>
+          <span class="chip teal">zero-padded at start</span>
+          <span class="chip teal">~32 seconds of history</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card purple">
+    <div class="card-inner">
+      <div class="step-num">04</div>
+      <div class="card-body">
+        <div class="card-title"><code>gm_inference.gd</code> — Transformer Forward Pass</div>
+        <div class="card-desc">Runs the full transformer in pure GDScript — no Python process required at runtime. Z-score normalisation applied first, then the full encoder stack, then the classification head.</div>
+        <div class="chips">
+          <span class="chip purple">z-score normalise</span>
+          <span class="chip purple">Input proj 20→64</span>
+          <span class="chip purple">Pos. Embedding</span>
+          <span class="chip purple">2× Encoder (MHA + FFN)</span>
+          <span class="chip purple">4 heads · d_head=16</span>
+          <span class="chip purple">FFN 64→128→64</span>
+          <span class="chip purple">Linear head → Softmax</span>
+          <span class="chip purple">&lt;1ms per inference</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector amber"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card amber">
+    <div class="card-inner">
+      <div class="step-num">05</div>
+      <div class="card-body">
+        <div class="card-title">13 Action Weights</div>
+        <div class="card-desc">Softmax output is a probability distribution over all 13 GM actions. The highest-weight action is selected (argmax). The full distribution is available for the in-game visualizer overlay.</div>
+        <div class="chips">
+          <span class="chip amber">probability distribution</span>
+          <span class="chip amber">sums to 1.0</span>
+          <span class="chip amber">argmax selection</span>
+          <span class="chip amber">visualizer reads all 13</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector green"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card green">
+    <div class="card-inner">
+      <div class="step-num">06</div>
+      <div class="card-body">
+        <div class="card-title">Apply GM Action</div>
+        <div class="card-desc">The chosen action immediately modifies spawning parameters. Takes effect on the next wave. The GM can apply pressure, grant relief, or send specialised enemy formations.</div>
+        <div class="chips">
+          <span class="chip green">hold</span>
+          <span class="chip green">surge</span>
+          <span class="chip green">ease</span>
+          <span class="chip green">force_rest</span>
+          <span class="chip green">clear_screen</span>
+          <span class="chip green">budget +/-</span>
+          <span class="chip green">rate +/-</span>
+          <span class="chip green">force_elite</span>
+          <span class="chip green">force_chase</span>
+          <span class="chip green">force_swarm</span>
+          <span class="chip green">force_diagonal</span>
+        </div>
+      </div>
+    </div>
+    <div class="loop-back">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.5 1.5C3.74 1.5 1.5 3.74 1.5 6.5s2.24 5 5 5 5-2.24 5-5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M9.5 1.5l1.5 2-2 .5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>game loop continues → back to step 01</span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#60a5fa"></div>Game / Player</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2dd4bf"></div>Data / Files</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c084fc"></div>ML / Model</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4ade80"></div>Output / Action</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#fbbf24"></div>Deployed Weights</div>
+  </div>
+
+</div>
+</body>
+</html>

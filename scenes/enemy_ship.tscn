@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://3lg10h6b0tp"]
+
+[ext_resource type="Script" path="res://scenes/enemy_ship.gd" id="1_7mjkw"]
+[ext_resource type="Texture2D" uid="uid://dol1o44marnbb" path="res://sprites/tiny-spaceships/tinyShip8.png" id="2_md6kq"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 18.0
+
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape2D_vyrs3"]
+points = PackedVector2Array(-14, -8, 14, -8, 0, 12)
+
+[node name="Area2D" type="Area2D" groups=["enemies"]]
+script = ExtResource("1_7mjkw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -59)
+shape = SubResource("CircleShape2D_1")
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+position = Vector2(0, -59)
+
+[node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D"]
+rotation = 3.14159
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("2_md6kq")
+region_enabled = true
+region_rect = Rect2(99, 0, 32, 29)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
+position = Vector2(0, -1.25)
+scale = Vector2(2.28881, 2.25)
+shape = SubResource("ConvexPolygonShape2D_vyrs3")
+debug_color = Color(0, 0.6, 0.701961, 0.419608)

@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Base Bomb Run — GM-AI System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c0c18;
+    --bg2:       #13131f;
+    --bg3:       #1a1a2e;
+    --blue:      #60a5fa;
+    --blue-bg:   rgba(59,130,246,0.08);
+    --blue-bdr:  rgba(96,165,250,0.28);
+    --teal:      #2dd4bf;
+    --teal-bg:   rgba(20,184,166,0.08);
+    --teal-bdr:  rgba(45,212,191,0.28);
+    --orange:    #fb923c;
+    --orange-bg: rgba(249,115,22,0.08);
+    --orange-bdr:rgba(251,146,60,0.28);
+    --purple:    #c084fc;
+    --purple-bg: rgba(168,85,247,0.08);
+    --purple-bdr:rgba(192,132,252,0.28);
+    --green:     #4ade80;
+    --green-bg:  rgba(74,222,128,0.08);
+    --green-bdr: rgba(74,222,128,0.28);
+    --amber:     #fbbf24;
+    --amber-bg:  rgba(251,191,36,0.08);
+    --amber-bdr: rgba(251,191,36,0.28);
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --dim:       #94a3b8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 48px 56px 64px;
+    min-width: 1200px;
+  }
+
+  /* Dot-grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    max-width: 1488px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /* ── Header ───────────────────────────────── */
+  header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.6px;
+    color: #fff;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+  .subtitle {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--dim);
+    font-weight: 300;
+  }
+
+  /* ── Diagram grid ─────────────────────────── */
+  .diagram {
+    display: grid;
+    grid-template-columns: 1fr 120px 1fr;
+    align-items: start;
+    position: relative;
+  }
+
+  /* ── Panel ────────────────────────────────── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-left: 2px;
+  }
+  .panel-label .pip {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .panel-label span {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+  }
+  .panel-left  .pip { background: var(--blue); }
+  .panel-left  span { color: var(--blue); }
+  .panel-right .pip { background: var(--green); }
+  .panel-right span { color: var(--green); }
+
+  /* ── Card ─────────────────────────────────── */
+  .card {
+    border-radius: 10px;
+    border: 1px solid;
+    padding: 14px 16px 14px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 10px 0 0 10px;
+  }
+
+  .card.blue   { background: var(--blue-bg);   border-color: var(--blue-bdr);   }
+  .card.blue::before   { background: var(--blue); }
+  .card.teal   { background: var(--teal-bg);   border-color: var(--teal-bdr);   }
+  .card.teal::before   { background: var(--teal); }
+  .card.orange { background: var(--orange-bg); border-color: var(--orange-bdr); }
+  .card.orange::before { background: var(--orange); }
+  .card.purple { background: var(--purple-bg); border-color: var(--purple-bdr); }
+  .card.purple::before { background: var(--purple); }
+  .card.green  { background: var(--green-bg);  border-color: var(--green-bdr);  }
+  .card.green::before  { background: var(--green); }
+  .card.amber  { background: var(--amber-bg);  border-color: var(--amber-bdr);  }
+  .card.amber::before  { background: var(--amber); }
+
+  .card-inner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 5px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .card-body { flex: 1; }
+
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .card-title code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+
+  /* ── Chips ────────────────────────────────── */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid;
+    line-height: 1.6;
+  }
+  .chip.blue   { color: #93c5fd; border-color: rgba(96,165,250,0.3);  background: rgba(59,130,246,0.1); }
+  .chip.teal   { color: #5eead4; border-color: rgba(45,212,191,0.3);  background: rgba(20,184,166,0.1); }
+  .chip.orange { color: #fdba74; border-color: rgba(251,146,60,0.3);  background: rgba(249,115,22,0.1); }
+  .chip.purple { color: #d8b4fe; border-color: rgba(192,132,252,0.3); background: rgba(168,85,247,0.1); }
+  .chip.green  { color: #86efac; border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.1); }
+  .chip.amber  { color: #fde68a; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.1); }
+
+  /* ── Step connector ───────────────────────── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 26px;
+    gap: 0;
+  }
+  .connector-line {
+    flex: 1;
+    width: 1.5px;
+  }
+  .connector-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+  }
+
+  .connector.blue   .connector-line { background: linear-gradient(to bottom, var(--blue-bdr), rgba(96,165,250,0.5)); }
+  .connector.blue   .connector-arrow { border-top: 5px solid rgba(96,165,250,0.7); }
+  .connector.teal   .connector-line { background: linear-gradient(to bottom, var(--teal-bdr), rgba(45,212,191,0.5)); }
+  .connector.teal   .connector-arrow { border-top: 5px solid rgba(45,212,191,0.7); }
+  .connector.orange .connector-line { background: linear-gradient(to bottom, var(--orange-bdr), rgba(251,146,60,0.5)); }
+  .connector.orange .connector-arrow { border-top: 5px solid rgba(251,146,60,0.7); }
+  .connector.purple .connector-line { background: linear-gradient(to bottom, var(--purple-bdr), rgba(192,132,252,0.5)); }
+  .connector.purple .connector-arrow { border-top: 5px solid rgba(192,132,252,0.7); }
+  .connector.green  .connector-line { background: linear-gradient(to bottom, var(--green-bdr), rgba(74,222,128,0.5)); }
+  .connector.green  .connector-arrow { border-top: 5px solid rgba(74,222,128,0.7); }
+  .connector.amber  .connector-line { background: linear-gradient(to bottom, var(--amber-bdr), rgba(251,191,36,0.5)); }
+  .connector.amber  .connector-arrow { border-top: 5px solid rgba(251,191,36,0.7); }
+
+  /* ── Loop-back indicator ──────────────────── */
+  .loop-back {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: rgba(74,222,128,0.05);
+    border: 1px dashed rgba(74,222,128,0.25);
+    border-radius: 7px;
+  }
+  .loop-back svg { flex-shrink: 0; }
+  .loop-back span {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(74,222,128,0.7);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Bridge SVG overlay ───────────────────── */
+  #bridge-svg {
+    position: absolute;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 20;
+    overflow: visible;
+  }
+
+  @keyframes dash-march {
+    to { stroke-dashoffset: -24; }
+  }
+  .bridge-march {
+    animation: dash-march 1.4s linear infinite;
+  }
+
+  /* ── Legend ───────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 20px;
+    margin-top: 44px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+  .legend-swatch {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Technical Architecture</div>
+    <h1>Space Base Bomb Run — <em>GM-AI System</em></h1>
+    <p class="subtitle">How human-labeled gameplay data trains a transformer that controls difficulty in real time</p>
+  </header>
+
+  <div class="diagram" id="diagram">
+
+    <!-- ═══════════════════════════════════════════ LEFT: TRAINING -->
+    <div class="panel panel-left">
+      <div class="panel-label">
+        <div class="pip"></div>
+        <span>Training Pipeline</span>
+      </div>
+
+      <div class="card blue">
+        <div class="card-inner">
+          <div class="step-num">01</div>
+          <div class="card-body">
+            <div class="card-title">Play the Game</div>
+            <div class="card-desc">Human plays normally. The built-in spawner runs unassisted while telemetry silently records.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector blue"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card teal">
+        <div class="card-inner">
+          <div class="step-num">02</div>
+          <div class="card-body">
+            <div class="card-title"><code>telemetry.gd</code> — Record Telemetry</div>
+            <div class="card-desc">Every 4 seconds, captures a 20-feature snapshot of game state and saves a screenshot. Appends a row to a session CSV.</div>
+            <div class="chips">
+              <span class="chip teal">20 features</span>
+              <span class="chip teal">4s interval</span>
+              <span class="chip teal">PNG screenshots</span>
+              <span class="chip teal">CSV per session</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card orange">
+        <div class="card-inner">
+          <div class="step-num">03</div>
+          <div class="card-body">
+            <div class="card-title"><code>tools/labeler.py</code> — Human Annotation</div>
+            <div class="card-desc">A Flask web UI shows each snapshot with its screenshot and stats. The human selects 1–3 actions and assigns relative weights — captured as a probability distribution.</div>
+            <div class="chips">
+              <span class="chip orange">human judgment</span>
+              <span class="chip orange">soft labels</span>
+              <span class="chip orange">1–3 actions per row</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card teal">
+        <div class="card-inner">
+          <div class="step-num">04</div>
+          <div class="card-body">
+            <div class="card-title"><code>master_data.csv</code> — Training Data</div>
+            <div class="card-desc">All labeled rows consolidated. Each row: 20 input features + 13 action weight columns summing to 1.0. Sessions detected automatically by play_time resets.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card purple">
+        <div class="card-inner">
+          <div class="step-num">05</div>
+          <div class="card-body">
+            <div class="card-title"><code>gm_ai/train.py</code> — Train Transformer</div>
+            <div class="card-desc">Trains against soft labels using KL divergence loss. Sliding windows of 8 snapshots. Adam + cosine LR schedule. Early stopping at patience 25.</div>
+            <div class="chips">
+              <span class="chip purple">~55K params</span>
+              <span class="chip purple">KL divergence</span>
+              <span class="chip purple">seq_len = 8</span>
+              <span class="chip purple">~1 min on CPU</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card purple">
+        <div class="card-inner">
+          <div class="step-num">06</div>
+          <div class="card-body">
+            <div class="card-title"><code>gm_ai/export_weights.py</code> — Export</div>
+            <div class="card-desc">Converts the PyTorch checkpoint and normalisation stats into a flat JSON structure that can be parsed by GDScript without any Python dependency.</div>
+            <div class="chips">
+              <span class="chip purple">PyTorch → JSON</span>
+              <span class="chip purple">~500 KB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector amber"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card amber" id="bridge-source">
+        <div class="card-inner">
+          <div class="step-num">07</div>
+          <div class="card-body">
+            <div class="card-title"><code>ai/weights.json</code> — Deployed Model</div>
+            <div class="card-desc">All transformer weights + feature normalisation stats packed into a single file. Committed to the Godot project. Loaded once at game startup.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Middle spacer (bridge arrow drawn here by JS) -->
+    <div></div>
+
+    <!-- ═══════════════════════════════════════════ RIGHT: INFERENCE -->
+    <div class="panel panel-right">
+      <div class="panel-label">
+        <div class="pip"></div>
+        <span>Inference / Gameplay</span>
+      </div>
+
+      <div class="card blue">
+        <div class="card-inner">
+          <div class="step-num">01</div>
+          <div class="card-body">
+            <div class="card-title">Spawn Timer Tick</div>
+            <div class="card-desc">The game's spawn timer fires on a regular interval, triggering the GM-AI pipeline. Interval is itself controlled by the GM.</div>
+            <div class="chips">
+              <span class="chip blue">2–6 second interval</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card teal">
+        <div class="card-inner">
+          <div class="step-num">02</div>
+          <div class="card-body">
+            <div class="card-title"><code>gm_controller.gd</code> — Collect Snapshot</div>
+            <div class="card-desc">Reads current game state and assembles the 20-feature vector. Identical feature order to what the model was trained on.</div>
+            <div class="chips">
+              <span class="chip teal">play_time</span>
+              <span class="chip teal">score</span>
+              <span class="chip teal">lives</span>
+              <span class="chip teal">enemy counts</span>
+              <span class="chip teal">threat</span>
+              <span class="chip teal">spawn budget</span>
+              <span class="chip teal">kills/hits (10s)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card teal">
+        <div class="card-inner">
+          <div class="step-num">03</div>
+          <div class="card-body">
+            <div class="card-title">Rolling Buffer — Last 8 Snapshots</div>
+            <div class="card-desc">Maintains a sliding window of the 8 most recent snapshots. Zero-padded on the left at game start. Provides temporal context to the transformer.</div>
+            <div class="chips">
+              <span class="chip teal">8 × 20 matrix</span>
+              <span class="chip teal">zero-padded</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card purple" id="bridge-target">
+        <div class="card-inner">
+          <div class="step-num">04</div>
+          <div class="card-body">
+            <div class="card-title"><code>gm_inference.gd</code> — Transformer Inference</div>
+            <div class="card-desc">Runs the full transformer forward pass in pure GDScript. No Python process required at runtime. Reads weights from <code>ai/weights.json</code>.</div>
+            <div class="chips">
+              <span class="chip purple">Input proj 20→64</span>
+              <span class="chip purple">Pos. Embedding</span>
+              <span class="chip purple">2× Encoder</span>
+              <span class="chip purple">MHA (4 heads)</span>
+              <span class="chip purple">FFN 64→128→64</span>
+              <span class="chip purple">Head + Softmax</span>
+              <span class="chip purple">&lt;1ms inference</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector amber"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card amber">
+        <div class="card-inner">
+          <div class="step-num">05</div>
+          <div class="card-body">
+            <div class="card-title">13 Action Weights</div>
+            <div class="card-desc">Softmax output is a probability distribution over all 13 GM actions. The action with the highest weight is selected (argmax).</div>
+            <div class="chips">
+              <span class="chip amber">probability distribution</span>
+              <span class="chip amber">sums to 1.0</span>
+              <span class="chip amber">argmax selection</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="connector green"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+      <div class="card green">
+        <div class="card-inner">
+          <div class="step-num">06</div>
+          <div class="card-body">
+            <div class="card-title">Apply GM Action</div>
+            <div class="card-desc">The chosen action immediately modifies spawning parameters. Takes effect on the next wave.</div>
+            <div class="chips">
+              <span class="chip green">hold</span>
+              <span class="chip green">surge</span>
+              <span class="chip green">ease</span>
+              <span class="chip green">force_rest</span>
+              <span class="chip green">clear_screen</span>
+              <span class="chip green">budget +/-</span>
+              <span class="chip green">rate +/-</span>
+              <span class="chip green">force_elite</span>
+              <span class="chip green">force_chase</span>
+              <span class="chip green">force_swarm</span>
+            </div>
+          </div>
+        </div>
+        <div class="loop-back">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 1.5C3.74 1.5 1.5 3.74 1.5 6.5s2.24 5 5 5 5-2.24 5-5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9.5 1.5l1.5 2-2 .5" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>game loop continues → back to step 01</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bridge arrow drawn by JS into this SVG -->
+    <svg id="bridge-svg"></svg>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#60a5fa"></div>Game / Player</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2dd4bf"></div>Data / Files</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#fb923c"></div>Human Annotation</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c084fc"></div>ML / Model</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#4ade80"></div>Output / Action</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#fbbf24"></div>Deployed Weights</div>
+  </div>
+
+</div>
+
+<script>
+  function drawBridge() {
+    const svg    = document.getElementById('bridge-svg');
+    const diag   = document.getElementById('diagram');
+    const src    = document.getElementById('bridge-source');
+    const tgt    = document.getElementById('bridge-target');
+    if (!svg || !diag || !src || !tgt) return;
+
+    // Clear previous drawing
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    const dRect  = diag.getBoundingClientRect();
+    const sRect  = src.getBoundingClientRect();
+    const tRect  = tgt.getBoundingClientRect();
+
+    const W = dRect.width;
+    const H = dRect.height;
+
+    svg.setAttribute('width',  W);
+    svg.setAttribute('height', H);
+    svg.style.width  = W + 'px';
+    svg.style.height = H + 'px';
+
+    // Source: right-center of bridge-source card
+    const x1 = sRect.right  - dRect.left;
+    const y1 = sRect.top    - dRect.top  + sRect.height * 0.5;
+    // Target: left-center of bridge-target card
+    const x2 = tRect.left   - dRect.left;
+    const y2 = tRect.top    - dRect.top  + tRect.height * 0.5;
+
+    const midX = (x1 + x2) / 2;
+    // Cubic bezier — control points lean toward the center
+    const cp1x = midX + 10, cp1y = y1;
+    const cp2x = midX - 10, cp2y = y2;
+
+    const d = `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+
+    // Glow layer
+    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    glow.setAttribute('d', d);
+    glow.setAttribute('fill', 'none');
+    glow.setAttribute('stroke', '#fbbf24');
+    glow.setAttribute('stroke-width', '12');
+    glow.setAttribute('stroke-opacity', '0.10');
+    glow.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(glow);
+
+    // Solid underline
+    const under = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    under.setAttribute('d', d);
+    under.setAttribute('fill', 'none');
+    under.setAttribute('stroke', '#78350f');
+    under.setAttribute('stroke-width', '3');
+    under.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(under);
+
+    // Animated dash
+    const dash = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    dash.setAttribute('d', d);
+    dash.setAttribute('fill', 'none');
+    dash.setAttribute('stroke', '#fbbf24');
+    dash.setAttribute('stroke-width', '2');
+    dash.setAttribute('stroke-dasharray', '8 5');
+    dash.setAttribute('stroke-linecap', 'round');
+    dash.classList.add('bridge-march');
+    svg.appendChild(dash);
+
+    // Arrowhead — approximate tangent at end of cubic bezier
+    const tx = x2 - cp2x, ty = y2 - cp2y;
+    const len = Math.sqrt(tx*tx + ty*ty) || 1;
+    const nx = tx/len, ny = ty/len;
+    const headLen = 9, headWid = 5;
+    const lx = x2 - headLen*nx + headWid*ny;
+    const ly = y2 - headLen*ny - headWid*nx;
+    const rx = x2 - headLen*nx - headWid*ny;
+    const ry = y2 - headLen*ny + headWid*nx;
+
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    arrow.setAttribute('points', `${x2},${y2} ${lx},${ly} ${rx},${ry}`);
+    arrow.setAttribute('fill', '#fbbf24');
+    svg.appendChild(arrow);
+
+    // Label background + text
+    const lx0  = midX, ly0 = (y1 + y2) / 2;
+    const label = 'loaded once at game startup';
+    const lw    = label.length * 6.3 + 18;
+    const lh    = 20;
+
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', lx0 - lw/2);
+    rect.setAttribute('y', ly0 - lh/2);
+    rect.setAttribute('width',  lw);
+    rect.setAttribute('height', lh);
+    rect.setAttribute('rx', '5');
+    rect.setAttribute('fill', '#0f0c1a');
+    rect.setAttribute('stroke', 'rgba(251,191,36,0.45)');
+    rect.setAttribute('stroke-width', '1');
+    svg.appendChild(rect);
+
+    const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    txt.setAttribute('x', lx0);
+    txt.setAttribute('y', ly0 + 4.5);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('fill', '#fde68a');
+    txt.setAttribute('font-family', 'Space Mono, monospace');
+    txt.setAttribute('font-size', '9.5');
+    txt.setAttribute('font-weight', '700');
+    txt.textContent = label;
+    svg.appendChild(txt);
+  }
+
+  window.addEventListener('load',   drawBridge);
+  window.addEventListener('resize', drawBridge);
+</script>
+</body>
+</html>

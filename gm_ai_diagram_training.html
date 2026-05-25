@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Base Bomb Run — Training Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0c0c18;
+    --bg2:       #13131f;
+    --bg3:       #1a1a2e;
+    --blue:      #60a5fa;
+    --blue-bg:   rgba(59,130,246,0.08);
+    --blue-bdr:  rgba(96,165,250,0.28);
+    --teal:      #2dd4bf;
+    --teal-bg:   rgba(20,184,166,0.08);
+    --teal-bdr:  rgba(45,212,191,0.28);
+    --orange:    #fb923c;
+    --orange-bg: rgba(249,115,22,0.08);
+    --orange-bdr:rgba(251,146,60,0.28);
+    --purple:    #c084fc;
+    --purple-bg: rgba(168,85,247,0.08);
+    --purple-bdr:rgba(192,132,252,0.28);
+    --green:     #4ade80;
+    --green-bg:  rgba(74,222,128,0.08);
+    --green-bdr: rgba(74,222,128,0.28);
+    --amber:     #fbbf24;
+    --amber-bg:  rgba(251,191,36,0.08);
+    --amber-bdr: rgba(251,191,36,0.28);
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --dim:       #94a3b8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 48px 56px 64px;
+    min-width: 640px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255,255,255,0.028) 1px, transparent 1px);
+    background-size: 26px 26px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    max-width: 740px;
+    margin: 0 auto;
+    z-index: 1;
+  }
+
+  /* ── Header ───────────────────────────────── */
+  header {
+    text-align: center;
+    margin-bottom: 44px;
+  }
+  .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--blue);
+  }
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13.5px;
+    color: var(--dim);
+    font-weight: 300;
+  }
+
+  /* ── Panel label ──────────────────────────── */
+  .panel-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-left: 2px;
+  }
+  .panel-label .pip {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+  }
+  .panel-label span {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+  }
+
+  /* ── Card ─────────────────────────────────── */
+  .card {
+    border-radius: 10px;
+    border: 1px solid;
+    padding: 14px 16px 14px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 10px 0 0 10px;
+  }
+
+  .card.blue   { background: var(--blue-bg);   border-color: var(--blue-bdr);   }
+  .card.blue::before   { background: var(--blue); }
+  .card.teal   { background: var(--teal-bg);   border-color: var(--teal-bdr);   }
+  .card.teal::before   { background: var(--teal); }
+  .card.orange { background: var(--orange-bg); border-color: var(--orange-bdr); }
+  .card.orange::before { background: var(--orange); }
+  .card.purple { background: var(--purple-bg); border-color: var(--purple-bdr); }
+  .card.purple::before { background: var(--purple); }
+  .card.green  { background: var(--green-bg);  border-color: var(--green-bdr);  }
+  .card.green::before  { background: var(--green); }
+  .card.amber  { background: var(--amber-bg);  border-color: var(--amber-bdr);  }
+  .card.amber::before  { background: var(--amber); }
+
+  .card-inner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 5px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .card-body { flex: 1; }
+
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+  .card-title code {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.55;
+    margin-bottom: 6px;
+  }
+
+  /* ── Chips ────────────────────────────────── */
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .chip {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid;
+    line-height: 1.6;
+  }
+  .chip.blue   { color: #93c5fd; border-color: rgba(96,165,250,0.3);  background: rgba(59,130,246,0.1); }
+  .chip.teal   { color: #5eead4; border-color: rgba(45,212,191,0.3);  background: rgba(20,184,166,0.1); }
+  .chip.orange { color: #fdba74; border-color: rgba(251,146,60,0.3);  background: rgba(249,115,22,0.1); }
+  .chip.purple { color: #d8b4fe; border-color: rgba(192,132,252,0.3); background: rgba(168,85,247,0.1); }
+  .chip.green  { color: #86efac; border-color: rgba(74,222,128,0.3);  background: rgba(74,222,128,0.1); }
+  .chip.amber  { color: #fde68a; border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.1); }
+
+  /* ── Step connector ───────────────────────── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 26px;
+  }
+  .connector-line {
+    flex: 1;
+    width: 1.5px;
+  }
+  .connector-arrow {
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+  }
+
+  .connector.blue   .connector-line { background: linear-gradient(to bottom, var(--blue-bdr), rgba(96,165,250,0.5)); }
+  .connector.blue   .connector-arrow { border-top: 5px solid rgba(96,165,250,0.7); }
+  .connector.teal   .connector-line { background: linear-gradient(to bottom, var(--teal-bdr), rgba(45,212,191,0.5)); }
+  .connector.teal   .connector-arrow { border-top: 5px solid rgba(45,212,191,0.7); }
+  .connector.orange .connector-line { background: linear-gradient(to bottom, var(--orange-bdr), rgba(251,146,60,0.5)); }
+  .connector.orange .connector-arrow { border-top: 5px solid rgba(251,146,60,0.7); }
+  .connector.purple .connector-line { background: linear-gradient(to bottom, var(--purple-bdr), rgba(192,132,252,0.5)); }
+  .connector.purple .connector-arrow { border-top: 5px solid rgba(192,132,252,0.7); }
+  .connector.green  .connector-line { background: linear-gradient(to bottom, var(--green-bdr), rgba(74,222,128,0.5)); }
+  .connector.green  .connector-arrow { border-top: 5px solid rgba(74,222,128,0.7); }
+  .connector.amber  .connector-line { background: linear-gradient(to bottom, var(--amber-bdr), rgba(251,191,36,0.5)); }
+  .connector.amber  .connector-arrow { border-top: 5px solid rgba(251,191,36,0.7); }
+
+  /* ── Output indicator ─────────────────────── */
+  .output-indicator {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: rgba(251,191,36,0.05);
+    border: 1px dashed rgba(251,191,36,0.3);
+    border-radius: 7px;
+  }
+  .output-indicator svg { flex-shrink: 0; }
+  .output-indicator span {
+    font-family: 'Space Mono', monospace;
+    font-size: 9.5px;
+    color: rgba(251,191,36,0.8);
+    letter-spacing: 0.4px;
+  }
+
+  /* ── Legend ───────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 20px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--dim);
+  }
+  .legend-swatch {
+    width: 11px; height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Training Pipeline</div>
+    <h1>Space Base Bomb Run — <em>GM-AI</em></h1>
+    <p class="subtitle">From raw gameplay to a deployable transformer in ~1 minute of training</p>
+  </header>
+
+  <div class="panel-label">
+    <div class="pip"></div>
+    <span>Training Pipeline</span>
+  </div>
+
+  <div class="card blue">
+    <div class="card-inner">
+      <div class="step-num">01</div>
+      <div class="card-body">
+        <div class="card-title">Play the Game</div>
+        <div class="card-desc">Human plays normally. The built-in spawner runs unassisted while telemetry silently records in the background.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card teal">
+    <div class="card-inner">
+      <div class="step-num">02</div>
+      <div class="card-body">
+        <div class="card-title"><code>telemetry.gd</code> — Record Telemetry</div>
+        <div class="card-desc">Every 4 seconds, captures a 20-feature snapshot of game state and saves a screenshot. Appends a row to a per-session CSV file automatically.</div>
+        <div class="chips">
+          <span class="chip teal">20 features / snapshot</span>
+          <span class="chip teal">4s interval</span>
+          <span class="chip teal">PNG screenshots</span>
+          <span class="chip teal">CSV per session</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector orange"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card orange">
+    <div class="card-inner">
+      <div class="step-num">03</div>
+      <div class="card-body">
+        <div class="card-title"><code>tools/labeler.py</code> — Human Annotation</div>
+        <div class="card-desc">A Flask web UI shows each snapshot alongside its screenshot and key stats. The annotator selects 1–3 actions and adjusts their relative weights — producing a soft probability distribution, not a hard label.</div>
+        <div class="chips">
+          <span class="chip orange">human judgment</span>
+          <span class="chip orange">soft labels</span>
+          <span class="chip orange">1–3 actions per row</span>
+          <span class="chip orange">progress auto-saved</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector teal"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card teal">
+    <div class="card-inner">
+      <div class="step-num">04</div>
+      <div class="card-body">
+        <div class="card-title"><code>data/master_data.csv</code> — Training Data</div>
+        <div class="card-desc">All labeled rows consolidated into one file. Each row contains 20 input features and 13 action-weight columns that sum to 1.0. Sessions are separated by play_time resets.</div>
+        <div class="chips">
+          <span class="chip teal">20 input features</span>
+          <span class="chip teal">13 action weights</span>
+          <span class="chip teal">sums to 1.0 per row</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card purple">
+    <div class="card-inner">
+      <div class="step-num">05</div>
+      <div class="card-body">
+        <div class="card-title"><code>gm_ai/train.py</code> — Train Transformer</div>
+        <div class="card-desc">Trains a 2-layer transformer encoder against soft labels using KL divergence loss. Builds sliding windows of 8 consecutive snapshots. Adam + cosine LR schedule, dropout 0.3, early stopping at patience 25.</div>
+        <div class="chips">
+          <span class="chip purple">~55K parameters</span>
+          <span class="chip purple">KL divergence loss</span>
+          <span class="chip purple">seq_len = 8</span>
+          <span class="chip purple">d_model = 64</span>
+          <span class="chip purple">4 attention heads</span>
+          <span class="chip purple">~1 min on CPU</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector purple"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card purple">
+    <div class="card-inner">
+      <div class="step-num">06</div>
+      <div class="card-body">
+        <div class="card-title"><code>gm_ai/export_weights.py</code> — Export</div>
+        <div class="card-desc">Converts the PyTorch checkpoint and z-score normalisation stats into a flat JSON structure readable by GDScript — no Python dependency at runtime.</div>
+        <div class="chips">
+          <span class="chip purple">PyTorch → JSON</span>
+          <span class="chip purple">~500 KB</span>
+          <span class="chip purple">includes norm stats</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector amber"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <div class="card amber">
+    <div class="card-inner">
+      <div class="step-num">07</div>
+      <div class="card-body">
+        <div class="card-title"><code>ai/weights.json</code> — Deployed Model</div>
+        <div class="card-desc">All transformer weights and normalisation stats packed into a single file. Committed into the Godot project and loaded once at game startup by <code>gm_inference.gd</code>.</div>
+        <div class="chips">
+          <span class="chip amber">weights + norm stats</span>
+          <span class="chip amber">loaded at game startup</span>
+        </div>
+      </div>
+    </div>
+    <div class="output-indicator">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1v12M7 13l-3-3M7 13l3-3" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>deployed → loaded by gm_inference.gd at game startup</span>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#60a5fa"></div>Game / Player</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#2dd4bf"></div>Data / Files</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#fb923c"></div>Human Annotation</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#c084fc"></div>ML / Model</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#fbbf24"></div>Deployed Weights</div>
+  </div>
+
+</div>
+</body>
+</html>

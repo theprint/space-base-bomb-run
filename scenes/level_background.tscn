@@ -1,0 +1,36 @@
+[gd_scene load_steps=8 format=3 uid="uid://b7qu8maqq25w4"]
+
+[ext_resource type="Shader" path="res://scenes/scroll.gdshader" id="1_66d4g"]
+[ext_resource type="Script" path="res://scenes/level_controller.gd" id="1_lpq8w"]
+[ext_resource type="PackedScene" uid="uid://gkbntjx81i11" path="res://scenes/player_ship.tscn" id="3_5jj6u"]
+[ext_resource type="PackedScene" uid="uid://p1n5upvv2wp0" path="res://scenes/timer.tscn" id="3_hlyfl"]
+[ext_resource type="Texture2D" uid="uid://dflxdju45vviv" path="res://sprites/shmup-tile.png" id="3_tvu2k"]
+[ext_resource type="Script" path="res://scenes/gm_controller.gd" id="6_vske3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_narl1"]
+shader = ExtResource("1_66d4g")
+shader_parameter/scroll_speed = 0.075
+
+[node name="Node2D" type="Node2D"]
+z_index = 5
+script = ExtResource("1_lpq8w")
+
+[node name="TextureRect" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_narl1")
+offset_top = -132.0
+offset_right = 1156.0
+offset_bottom = 1024.0
+texture = ExtResource("3_tvu2k")
+stretch_mode = 1
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_right = 1155.0
+offset_bottom = 650.0
+color = Color(0, 0.45098, 0.329412, 0.298039)
+
+[node name="player" parent="." instance=ExtResource("3_5jj6u")]
+
+[node name="SpawnTimer" parent="." instance=ExtResource("3_hlyfl")]
+
+[node name="AIController" type="Node" parent="."]
+script = ExtResource("6_vske3")

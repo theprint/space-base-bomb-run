@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://gkbntjx81i11"]
+
+[ext_resource type="Script" path="res://scenes/player_CharacterBody2D.gd" id="1_u2ngv"]
+[ext_resource type="Texture2D" uid="uid://qdhw3a4t10me" path="res://sprites/tiny-spaceships/tinyShip1.png" id="2_hgr0t"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_player"]
+radius = 11.0
+
+[node name="Node2D" type="Node2D" groups=["player"]]
+
+[node name="CharacterBody2D" type="CharacterBody2D" parent="."]
+position = Vector2(583, 493)
+script = ExtResource("1_u2ngv")
+
+[node name="Sprite2D" type="Sprite2D" parent="CharacterBody2D"]
+scale = Vector2(2.25, 2.25)
+texture = ExtResource("2_hgr0t")
+region_enabled = true
+region_rect = Rect2(0, 0, 24.5612, 25.5774)
+region_filter_clip_enabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CharacterBody2D"]
+shape = SubResource("CircleShape2D_player")
+debug_color = Color(0, 0.6, 0.701961, 0.419608)
